@@ -1,0 +1,4 @@
+.ropeproject/
+.ropeproject/*
+qtdesigner_example/__pycache__/
+qtdesigner_example/__pycache__/*
