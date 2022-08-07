@@ -11,7 +11,7 @@ class Worker(QObject):
     """Class Worker for long thread
     """
     finished = Signal()     # Define signal finished
-    progress = Signal(int)  # Define signal progress
+    progress = Signal(int)  # Define signal progress this signal also pass info
 
     def run(self):
         """Implement of long running task
