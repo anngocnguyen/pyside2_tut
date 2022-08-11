@@ -1,4 +1,5 @@
 import sys
+from unittest.result import failfast
 
 from PySide2 import QtCore, QtGui, QtWidgets
 from ui_console import Ui_Console
@@ -8,6 +9,8 @@ class Console(QtWidgets.QWidget, Ui_Console):
     outputSignal = QtCore.Signal(str)
     startSignal = QtCore.Signal(str)
     killSignal = QtCore.Signal()
+
+    cmd_history = []
 
     def __init__(self):
         super().__init__()
@@ -26,6 +29,8 @@ class Console(QtWidgets.QWidget, Ui_Console):
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Enter or \
                 event.key() == QtCore.Qt.Key_Return:
+            if self.process.state() != QtCore.QProcess.NotRunning:   # return if process is still running
+                return
             self.startSignal.emit(self.txtCmd.text())
             self.txtCmd.setText('')
         elif event.modifiers() == QtCore.Qt.ControlModifier and \
@@ -45,6 +50,7 @@ class Console(QtWidgets.QWidget, Ui_Console):
     def slotStart(self, cmd):
         """Executes a system command.
         """
+
         self.txtOutput.appendPlainText('> {}'.format(cmd))
         cmdSplitted = cmd.split(' ')
         self.process.setProgram(cmdSplitted[0])
