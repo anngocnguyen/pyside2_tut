@@ -10,12 +10,13 @@ class Console(QtWidgets.QWidget, Ui_Console):
     startSignal = QtCore.Signal(str)
     killSignal = QtCore.Signal()
 
-    cmd_history = []
-
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         self.txtOutput.setReadOnly(True)
+
+        self.cmd_history = []
+        self.cmd_history_index = 0
 
         self.output = None
         self.error = None
@@ -28,14 +29,33 @@ class Console(QtWidgets.QWidget, Ui_Console):
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Enter or \
-                event.key() == QtCore.Qt.Key_Return:
+            event.key() == QtCore.Qt.Key_Return:
+            # Enter key
             if self.process.state() != QtCore.QProcess.NotRunning:   # return if process is still running
                 return
-            self.startSignal.emit(self.txtCmd.text())
+            cmd = self.txtCmd.text()
             self.txtCmd.setText('')
+            self.cmd_history_index = 0
+            self.cmd_history.append(cmd)
+            self.startSignal.emit(cmd)
         elif event.modifiers() == QtCore.Qt.ControlModifier and \
-                event.key() == QtCore.Qt.Key_Q:
+            event.key() == QtCore.Qt.Key_Q:
+            # Ctrl+Q key
             self.killSignal.emit()
+        elif event.key() == QtCore.Qt.Key_Up:
+            # Up arrow key
+            self.cmd_history_index -= 1
+            try:
+                self.txtCmd.setText(self.cmd_history[self.cmd_history_index])
+            except IndexError:
+                self.cmd_history_index += 1
+        elif event.key() == QtCore.Qt.Key_Down:
+            # Down arrow key
+            self.cmd_history_index += 1
+            try:
+                self.txtCmd.setText(self.cmd_history[self.cmd_history_index])
+            except IndexError:
+                self.cmd_history_index -= 1
 
     def slotReadyStdErr(self):
         error = self.process.readAllStandardError().data().decode()
@@ -50,7 +70,6 @@ class Console(QtWidgets.QWidget, Ui_Console):
     def slotStart(self, cmd):
         """Executes a system command.
         """
-
         self.txtOutput.appendPlainText('> {}'.format(cmd))
         cmdSplitted = cmd.split(' ')
         self.process.setProgram(cmdSplitted[0])
